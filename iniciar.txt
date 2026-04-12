@@ -1,0 +1,12 @@
+docker-compose up -d --build
+
+curl.exe -X POST http://localhost:8081/api/tickets `
+     -H "Content-Type: application/json" `
+     -d '{"descripcion": "Revisar filtración en baño 204", "consentimiento": true}'
+
+docker-compose down
+
+
+http://localhost:8081/swagger-ui/index.html#/write-ticket-controller/registrarTicket
+
+http://localhost:8082/swagger-ui/index.html#/read-ticket-controller/consultarEstado
