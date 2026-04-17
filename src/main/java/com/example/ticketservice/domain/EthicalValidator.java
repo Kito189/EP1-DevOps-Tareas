@@ -22,18 +22,18 @@ public class EthicalValidator {
             throw new IllegalArgumentException("ERROR ÉTICO: La descripción contiene lenguaje no permitido.");
         }
     }
+}
 
     public static void validateTicketDescription(String descripcion) {
         if (descripcion == null || descripcion.trim().isEmpty()) {
             throw new IllegalArgumentException("La descripción del ticket no puede estar vacía");
         }
-
+        
         if (descripcion.length() < 5) {
             throw new IllegalArgumentException("La descripción debe tener al menos 5 caracteres");
         }
-
+        
         if (descripcion.length() > 500) {
             throw new IllegalArgumentException("La descripción no puede exceder 500 caracteres");
         }
     }
-}
