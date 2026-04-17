@@ -2,41 +2,49 @@ name: Docker Build
 
 on:
   push:
-    branches: [ main ]
-    tags: [ 'v*' ]
+    branches: [ main, develop ]
   pull_request:
     branches: [ main ]
 
 jobs:
   docker:
     runs-on: ubuntu-latest
-    
+    name: Construir Imagen Docker
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    
-    - name: Build Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        push: false
-        tags: ticket-service:latest
-        file: ./Dockerfile
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-    
-    - name: Verify Docker Compose file
+    - name: Checkout del repositorio
+      uses: actions/checkout@v4
+
+    - name: Configurar Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Verificar Dockerfile existe
       run: |
-        if [ -f "docker-compose.yml" ]; then
-          echo "✓ docker-compose.yml found and valid"
+        if [ -f "Dockerfile" ]; then
+          echo "✓ Dockerfile encontrado"
         else
-          echo "✗ docker-compose.yml not found"
+          echo "✗ Dockerfile no encontrado"
           exit 1
         fi
 
-    - name: Verify Dockerfile
+    - name: Verificar docker-compose.yml existe
       run: |
-        docker build -t ticket-service:test .
-        docker image inspect ticket-service:test
+        if [ -f "docker-compose.yml" ]; then
+          echo "✓ docker-compose.yml encontrado"
+        else
+          echo "✗ docker-compose.yml no encontrado"
+          exit 1
+        fi
+
+    - name: Construir imagen Docker
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: false
+        load: true
+        tags: ticket-service:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Inspeccionar imagen construida
+      run: docker image inspect ticket-service:latest
