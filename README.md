@@ -63,6 +63,73 @@ curl http://localhost:8082/api/tickets/{ID_AQUI}
 docker-compose down
 \`\`\`
 
+## 🌳 Git Flow Strategy
+
+Este proyecto implementa **Git Flow** para el control de versiones y colaboración.
+
+### Ramas Principales
+- **`main`**: Rama de producción. Solo contiene código probado y listo para deploy.
+- **`develop`**: Rama de integración. Contiene las características completadas lisas para el siguiente release.
+
+### Ramas de Soporte
+- **`feature/<nombre>`**: Para nuevas características. Se crean desde `develop` y se mergean vía Pull Request.
+  - Ejemplo: `feature/tickets-validation`, `feature/enhanced-logging`
+- **`hotfix/<nombre>`**: Para correcciones urgentes en producción. Se crean desde `main` y se mergean a `main` y `develop`.
+  - Ejemplo: `hotfix/dockerfile-optimization`
+
+### Flujo de Trabajo Colaborativo
+
+```
+1. Crear rama de feature desde develop
+   git checkout -b feature/nombre-feature develop
+
+2. Hacer commits con mensajes descriptivos
+   git commit -m "feat: descripción clara del cambio"
+
+3. Pushear la rama
+   git push origin feature/nombre-feature
+
+4. Crear Pull Request (PR) en GitHub
+   - Base: develop (para features)
+   - Base: main (para hotfixes)
+
+5. Code Review y Merge automático via GitHub Actions
+   - Los tests corren automáticamente
+   - Si pasan, se puede mergear
+
+6. Después del merge, eliminar la rama
+   git branch -d feature/nombre-feature
+```
+
+### Convenciones de Commits
+
+Usamos **Conventional Commits** para commits claros y versionables:
+
+```
+<tipo>(<alcance>): <descripción>
+
+<cuerpo opcional>
+
+<pie opcional>
+```
+
+**Tipos:**
+- `feat`: Nueva funcionalidad
+- `fix`: Corrección de bug
+- `docs`: Cambios en documentación
+- `test`: Agregar o actualizar tests
+- `refactor`: Cambio de código sin agregar feature o fix
+- `chore`: Cambios de configuración, dependencias, etc.
+- `ci`: Cambios en CI/CD
+
+**Ejemplos:**
+```
+feat(tickets): add description length validation
+fix(docker): optimize multi-stage build for production
+docs: update git flow documentation
+test(validators): add ethical validator tests
+```
+
 ## 📖 Documentación API
 
 ### Swagger UI
