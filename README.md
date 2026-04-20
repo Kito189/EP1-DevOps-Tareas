@@ -530,6 +530,7 @@ GET /api/tickets
 - **[COLLABORATION.md](COLLABORATION.md)**: Guía detallada de colaboración
 - **[ARCHITECTURE.md](ARCHITECTURE.md)**: Explicación completa de la arquitectura
 - **[ENTREGA.md](ENTREGA.md)**: Documento de entrega de la evaluación
+- **[REFLEXIONES.md](REFLEXIONES.md)**: Reflexiones personales y declaración de uso de IA
 
 ---
 
