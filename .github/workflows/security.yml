@@ -22,25 +22,22 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Descargar dependencias Maven
-        run: mvn -B dependency:go-offline
+      - name: Compilar proyecto
+        run: mvn -B package -DskipTests
+
+      - name: Instalar Snyk CLI
+        run: npm install -g snyk
 
       - name: Escanear dependencias con Snyk
-        uses: snyk/actions/maven@master
-        continue-on-error: false
+        run: snyk test --file=pom.xml --severity-threshold=critical --org=kito189
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          args: --severity-threshold=critical --org=kito189
 
       - name: Monitorear proyecto en Snyk
-        uses: snyk/actions/maven@master
+        run: snyk monitor --file=pom.xml --org=kito189
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: monitor
-          args: --org=kito189
 
   sonarcloud:
     runs-on: ubuntu-latest
