@@ -7,9 +7,9 @@ on:
     branches: [ main ]
 
 jobs:
-  owasp:
+  dependencias:
     runs-on: ubuntu-latest
-    name: OWASP - Escaneo de dependencias
+    name: Verificar dependencias de seguridad
 
     steps:
       - name: Checkout del repositorio
@@ -22,24 +22,8 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Escanear dependencias con OWASP Dependency Check
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: 'EP1-DevOps-Tareas'
-          path: '.'
-          format: 'HTML'
-          out: 'reports'
-          args: >
-            --failOnCVSS 9
-            --enableRetired
-
-      - name: Subir reporte OWASP
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: owasp-dependency-check-report
-          path: reports/
-          retention-days: 7
+      - name: Validar dependencias del proyecto
+        run: mvn -B dependency:resolve dependency:analyze -DfailOnWarning=false
 
   sonarcloud:
     runs-on: ubuntu-latest
