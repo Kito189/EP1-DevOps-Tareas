@@ -33,7 +33,6 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
           JAVA_HOME: ${{ env.JAVA_HOME }}
-          PATH: ${{ env.PATH }}
 
       - name: Monitorear proyecto en Snyk
         run: snyk monitor --file=pom.xml --org=kito189
@@ -41,7 +40,6 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
           JAVA_HOME: ${{ env.JAVA_HOME }}
-          PATH: ${{ env.PATH }}
 
   sonarcloud:
     runs-on: ubuntu-latest
