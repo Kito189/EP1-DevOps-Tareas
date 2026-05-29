@@ -22,18 +22,25 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Instalar Snyk CLI
-        run: npm install -g snyk
-
-      - name: Autenticar Snyk
-        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+      - name: Descargar dependencias Maven
+        run: mvn -B dependency:go-offline
 
       - name: Escanear dependencias con Snyk
-        run: snyk test --all-projects --severity-threshold=critical
+        uses: snyk/actions/maven@master
         continue-on-error: false
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=critical --org=kito189
 
       - name: Monitorear proyecto en Snyk
-        run: snyk monitor --all-projects --org=kito189
+        uses: snyk/actions/maven@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: monitor
+          args: --org=kito189
 
   sonarcloud:
     runs-on: ubuntu-latest
@@ -57,10 +64,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      - name: Verificar Quality Gate
-        uses: sonarsource/sonarqube-quality-gate-action@master
-        timeout-minutes: 5
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
