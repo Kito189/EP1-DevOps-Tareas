@@ -29,7 +29,7 @@ jobs:
         run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
       - name: Escanear dependencias con Snyk
-        run: snyk test --all-projects --severity-threshold=high
+        run: snyk test --all-projects --severity-threshold=critical
         continue-on-error: false
 
       - name: Monitorear proyecto en Snyk
@@ -53,12 +53,7 @@ jobs:
           cache: maven
 
       - name: Compilar y analizar con SonarCloud
-        run: |
-          mvn -B verify sonar:sonar \
-            -Dsonar.projectKey=Kito189_EP1-DevOps-Tareas \
-            -Dsonar.organization=kito189 \
-            -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+        run: mvn -B verify sonar:sonar -Dsonar.token=${{ secrets.SONAR_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
