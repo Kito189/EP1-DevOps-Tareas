@@ -22,29 +22,27 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Generar reporte de dependencias
-        run: mvn -B dependency:tree -DoutputType=dot -DoutputFile=dependency-tree.dot
-
       - name: Instalar Snyk CLI
+        run: npm install -g snyk
+
+      - name: Limpiar settings de Maven
         run: |
-          curl -Lo snyk https://github.com/snyk/snyk/releases/latest/download/snyk-linux
-          chmod +x snyk
-          sudo mv snyk /usr/local/bin/
+          cat > ~/.m2/settings.xml << 'EOF'
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+            <localRepository>${user.home}/.m2/repository</localRepository>
+          </settings>
+          EOF
 
       - name: Escanear dependencias con Snyk
-        run: snyk test --file=pom.xml --package-manager=maven --severity-threshold=critical --org=kito189
+        run: snyk test --file=pom.xml --severity-threshold=critical --org=kito189
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          JAVA_HOME: ${{ env.JAVA_HOME }}
-          M2_HOME: /usr/share/maven
 
       - name: Monitorear proyecto en Snyk
-        run: snyk monitor --file=pom.xml --package-manager=maven --org=kito189
+        run: snyk monitor --file=pom.xml --org=kito189
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          JAVA_HOME: ${{ env.JAVA_HOME }}
-          M2_HOME: /usr/share/maven
 
   sonarcloud:
     runs-on: ubuntu-latest
