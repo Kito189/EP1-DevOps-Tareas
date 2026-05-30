@@ -92,8 +92,8 @@ jobs:
       run: |
         Write-Host "Esperando que PostgreSQL esté saludable..."
         for ($i = 1; $i -le 12; $i++) {
-          $status = docker compose ps --format json | python3 -c "import sys,json; data=[json.loads(l) for l in sys.stdin if l.strip()]; healthy=[s for s in data if 'db' in s.get('Name','') and s.get('Health','') == 'healthy']; print('ok' if healthy else 'wait')" 2>$null
-          if ($status -eq "ok") {
+          $status = docker inspect --format '{{.State.Health.Status}}' ticket-db 2>$null
+          if ($status -eq "healthy") {
             Write-Host "Base de datos lista."
             break
           }
