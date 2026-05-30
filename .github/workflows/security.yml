@@ -8,7 +8,7 @@ on:
 
 jobs:
   dependencias:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     name: Verificar dependencias de seguridad
 
     steps:
@@ -26,7 +26,7 @@ jobs:
         run: mvn -B dependency:resolve dependency:analyze -DfailOnWarning=false
 
   sonarcloud:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     name: SonarCloud - Análisis de código
 
     steps:

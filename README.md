@@ -53,6 +53,37 @@ Aplicación de microservicios que implementa el patrón **CQRS** (Command Query 
 
 ---
 
+## Self-Hosted Runner
+
+Este proyecto utiliza un **runner self-hosted** en Windows para ejecutar los pipelines de CI/CD directamente en la máquina local, lo que permite el despliegue real con Docker Compose.
+
+### Configuración del Runner
+
+```powershell
+# 1. Crear carpeta y descargar
+mkdir C:\actions-runner; cd C:\actions-runner
+Invoke-WebRequest -Uri https://github.com/actions/runner/releases/download/v2.334.0/actions-runner-win-x64-2.334.0.zip -OutFile actions-runner-win-x64-2.334.0.zip
+
+# 2. Extraer
+Expand-Archive -Path .\actions-runner-win-x64-2.334.0.zip -DestinationPath . -Force
+
+# 3. Configurar (obtener token en: repo → Settings → Actions → Runners → New self-hosted runner)
+.\config.cmd --url https://github.com/Kito189/EP1-DevOps-Tareas --token <TOKEN>
+
+# 4. Ejecutar como servicio
+.\run.cmd
+```
+
+### Especificaciones del Runner
+| Propiedad | Valor |
+|---|---|
+| Nombre | KITO |
+| OS | Windows X64 |
+| Labels | `self-hosted`, `Windows`, `X64` |
+| Estado | Idle (activo) |
+
+---
+
 ## Inicio Rápido
 
 ### 1. Clonar el Repositorio
