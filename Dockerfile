@@ -29,7 +29,9 @@ RUN addgroup -g 1000 appuser && \
 
 # Copiar el JAR desde la etapa builder
 COPY --from=builder /app/target/ticket-service-*.jar app.jar
-RUN chown appuser:appuser app.jar
+RUN chown appuser:appuser app.jar && \
+    mkdir -p logs/archived && \
+    chown -R appuser:appuser logs
 
 # Cambiar a usuario no-root
 USER appuser
