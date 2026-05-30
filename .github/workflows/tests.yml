@@ -88,7 +88,7 @@ jobs:
       run: docker compose up -d --build
 
     - name: Esperar que la base de datos esté lista
-      shell: pwsh
+      shell: powershell
       run: |
         Write-Host "Esperando que PostgreSQL esté saludable..."
         for ($i = 1; $i -le 12; $i++) {
@@ -102,7 +102,7 @@ jobs:
         }
 
     - name: Esperar que los servicios estén disponibles
-      shell: pwsh
+      shell: powershell
       run: |
         Write-Host "Esperando write-service (puerto 8081)..."
         for ($i = 1; $i -le 12; $i++) {
@@ -129,7 +129,7 @@ jobs:
       run: docker compose ps
 
     - name: Verificar salud de los servicios
-      shell: pwsh
+      shell: powershell
       run: |
         Write-Host "=== Write Service Health ==="
         try { Invoke-WebRequest -Uri http://localhost:8081/actuator/health -UseBasicParsing | Select-Object -ExpandProperty Content } catch { Write-Host "Write service no responde" }

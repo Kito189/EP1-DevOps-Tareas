@@ -19,7 +19,7 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Verificar Dockerfile existe
-      shell: pwsh
+      shell: powershell
       run: |
         if (Test-Path "Dockerfile") {
           Write-Host "Dockerfile encontrado"
@@ -29,7 +29,7 @@ jobs:
         }
 
     - name: Verificar docker-compose.yml existe
-      shell: pwsh
+      shell: powershell
       run: |
         if (Test-Path "docker-compose.yml") {
           Write-Host "docker-compose.yml encontrado"
