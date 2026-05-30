@@ -1,7 +1,7 @@
-# Ticket Service - Microservicio con CQRS y Arquitectura Hexagonal
+# Ticket Service - Pipeline CI/CD con CQRS y Arquitectura Hexagonal
 
-> **Evaluación Parcial N°1 - DOY0101 Ingeniería DevOps**
-> Implementación de pipeline DevOps con Git Flow, GitHub Actions y mejores prácticas de colaboración.
+> **Evaluación Parcial N°2 - DOY0101 Ingeniería DevOps**
+> Pipeline CI/CD completo con contenedores, pruebas automatizadas, análisis de seguridad, despliegue automático y orquestación.
 
 Aplicación de microservicios que implementa el patrón **CQRS** (Command Query Responsibility Segregation) con **Arquitectura Hexagonal** para gestionar tickets de soporte, desplegado con una estrategia DevOps completa.
 
@@ -12,15 +12,18 @@ Aplicación de microservicios que implementa el patrón **CQRS** (Command Query 
 1. [Arquitectura](#arquitectura)
 2. [Requisitos Previos](#requisitos-previos)
 3. [Inicio Rápido](#inicio-rápido)
-4. [Estrategia de Ramificación (Git Flow)](#estrategia-de-ramificación-git-flow)
-5. [Convenciones de Commits](#convenciones-de-commits)
-6. [Naming de Ramas](#naming-de-ramas)
-7. [Flujos de Merge](#flujos-de-merge)
-8. [Estrategias de Revisión](#estrategias-de-revisión)
-9. [CI/CD con GitHub Actions](#cicd-con-github-actions)
-10. [Estructura del Proyecto](#estructura-del-proyecto)
-11. [Tests](#tests)
-12. [Endpoints API](#endpoints-api)
+4. [Pipeline CI/CD y Trazabilidad](#pipeline-cicd-y-trazabilidad)
+5. [Despliegue Automático (IE4)](#despliegue-automático-ie4)
+6. [Orquestación de Contenedores (IE5)](#orquestación-de-contenedores-ie5)
+7. [Estrategia de Ramificación (Git Flow)](#estrategia-de-ramificación-git-flow)
+8. [Convenciones de Commits](#convenciones-de-commits)
+9. [Naming de Ramas](#naming-de-ramas)
+10. [Flujos de Merge](#flujos-de-merge)
+11. [Estrategias de Revisión](#estrategias-de-revisión)
+12. [CI/CD con GitHub Actions](#cicd-con-github-actions)
+13. [Estructura del Proyecto](#estructura-del-proyecto)
+14. [Tests](#tests)
+15. [Endpoints API](#endpoints-api)
 
 ---
 
@@ -86,6 +89,173 @@ curl http://localhost:8082/api/tickets/{ID}
 ### 5. Detener los Servicios
 ```bash
 docker-compose down
+```
+
+---
+
+## Pipeline CI/CD y Trazabilidad
+
+El pipeline CI/CD de este proyecto garantiza la trazabilidad completa del código desde el desarrollo hasta el despliegue en producción simulada. Cada push activa una cadena de jobs encadenados que validan, construyen y despliegan la aplicación.
+
+### Flujo completo de trazabilidad
+
+```
+Developer push / PR
+        │
+        ▼
+┌─────────────────┐
+│  tests.yml      │
+│  Job: test      │  ← Ejecuta 24 tests unitarios e integración (JUnit)
+│  (Java 17)      │    Falla el pipeline si algún test no pasa
+└────────┬────────┘
+         │ needs: test
+         ▼
+┌─────────────────┐
+│  tests.yml      │
+│  Job: build     │  ← Compila y empaqueta el JAR con Maven
+│                 │    Sube el artefacto como GitHub artifact
+└────────┬────────┘
+         │ needs: build
+         ▼
+┌─────────────────────────────┐
+│  tests.yml                  │
+│  Job: deploy                │  ← Construye imagen Docker + docker compose up -d
+│  (Docker Compose simulado)  │    Verifica health checks de write y read service
+│                             │    Muestra logs de trazabilidad
+└─────────────────────────────┘
+         │  (paralelo)
+         ▼
+┌─────────────────┐   ┌──────────────────────┐
+│  docker.yml     │   │  security.yml         │
+│  Job: docker    │   │  Job: dependencias    │  ← Análisis de dependencias Maven
+│  Build imagen   │   │  Job: sonarcloud      │  ← Análisis estático de código
+└─────────────────┘   └──────────────────────┘
+```
+
+### Garantías de calidad y trazabilidad
+
+| Etapa | Herramienta | Qué garantiza |
+|-------|-------------|---------------|
+| Tests | JUnit + Maven Surefire | Corrección funcional antes del merge |
+| Build | Maven | El artefacto es reproducible y compilable |
+| Contenedor | Docker Buildx | La imagen es válida y ejecutable |
+| Despliegue | Docker Compose | Los servicios levantan correctamente en conjunto |
+| Dependencias | Dependabot + Maven | Sin vulnerabilidades conocidas en librerías |
+| Código | SonarCloud | Cobertura y calidad de código estática |
+
+Los reportes de tests se guardan como artifacts en GitHub Actions (retención 7 días), permitiendo auditar cualquier ejecución pasada.
+
+---
+
+## Despliegue Automático (IE4)
+
+El job `deploy` en [`.github/workflows/tests.yml`](.github/workflows/tests.yml) se ejecuta **automáticamente** después de que el job `build` pasa exitosamente. Esto garantiza que solo código compilado y probado llega al entorno simulado.
+
+### ¿Qué hace el job deploy?
+
+1. Construye el JAR con Maven (`mvn clean package -DskipTests`)
+2. Ejecuta `docker compose up -d --build` — levanta PostgreSQL + write-service + read-service
+3. Espera activamente que la base de datos esté saludable (healthcheck)
+4. Verifica que los servicios respondan en `/actuator/health`
+5. Muestra logs de trazabilidad de los contenedores
+6. Apaga el entorno con `docker compose down -v`
+
+### Disparadores
+
+El despliegue automático se activa en:
+- Push a las ramas `main` o `develop`
+- Pull Requests hacia `main` o `develop`
+
+### Configuración local del despliegue
+
+```bash
+# Construir JAR primero
+./mvnw clean package -DskipTests
+
+# Desplegar el entorno completo
+docker compose up -d --build
+
+# Verificar que los servicios están saludables
+curl http://localhost:8081/actuator/health
+curl http://localhost:8082/actuator/health
+
+# Apagar el entorno
+docker compose down -v
+```
+
+---
+
+## Orquestación de Contenedores (IE5)
+
+El proyecto implementa dos estrategias de orquestación: **Docker Compose** para desarrollo/simulación y **Kubernetes** para producción.
+
+### Docker Compose (Entorno simulado)
+
+El archivo [`docker-compose.yml`](docker-compose.yml) orquesta tres contenedores en una red privada `ticket-network`:
+
+```
+┌──────────────────────────────────────────────────────┐
+│                   ticket-network                      │
+│                                                      │
+│  ┌──────────────┐    ┌───────────────┐    ┌────────┐ │
+│  │ write-service│    │  read-service │    │  db    │ │
+│  │  :8081→8080  │    │  :8082→8080  │    │  :5432 │ │
+│  │  512MB limit │    │  512MB limit  │    │        │ │
+│  └──────┬───────┘    └──────┬────────┘    └───┬────┘ │
+│         └────────────────────┘                │      │
+│                   depends_on (healthy)────────┘      │
+│                                                      │
+│  postgres-data (volumen persistente)                 │
+└──────────────────────────────────────────────────────┘
+```
+
+**Características de orquestación:**
+- Red privada `bridge` aísla los servicios del host
+- Healthcheck en PostgreSQL — los servicios de aplicación esperan que la BD esté lista antes de arrancar
+- Volumen persistente `postgres-data` — los datos sobreviven reinicios
+- Límites de memoria (512MB) para simular restricciones de producción
+- `restart: unless-stopped` para alta disponibilidad
+
+### Kubernetes (Producción)
+
+Los archivos en [`k8s/`](k8s/) definen el despliegue en un cluster Kubernetes:
+
+**[`k8s/deployment.yml`](k8s/deployment.yml)** — Deployments y recursos:
+- `ticket-write-deployment`: 2 réplicas del write service con liveness/readiness probes
+- `ticket-read-deployment`: 2 réplicas del read service con liveness/readiness probes
+- `postgres-deployment`: 1 réplica de PostgreSQL con PVC de 1Gi
+- `Secret` para credenciales de base de datos
+- `PersistentVolumeClaim` para almacenamiento persistente
+
+**[`k8s/service.yml`](k8s/service.yml)** — Exposición de servicios:
+- `ticket-write-service`: LoadBalancer en puerto 8081
+- `ticket-read-service`: LoadBalancer en puerto 8082
+- `postgres-service`: ClusterIP (solo accesible internamente)
+
+#### Desplegar en Kubernetes local (minikube)
+
+```bash
+# Iniciar minikube
+minikube start
+
+# Cargar imagen local
+minikube image load ticket-service:latest
+
+# Aplicar manifiestos
+kubectl apply -f k8s/deployment.yml
+kubectl apply -f k8s/service.yml
+
+# Verificar estado
+kubectl get pods
+kubectl get services
+
+# Acceder a los servicios
+minikube service ticket-write-service
+minikube service ticket-read-service
+
+# Eliminar recursos
+kubectl delete -f k8s/service.yml
+kubectl delete -f k8s/deployment.yml
 ```
 
 ---
@@ -367,22 +537,23 @@ Cada PR debe incluir:
 
 ### Workflows Configurados
 
-El proyecto incluye **2 workflows automatizados**:
+El proyecto incluye **3 workflows automatizados**:
 
-#### 1. Tests Workflow (`.github/workflows/tests.yml`)
+#### 1. Tests + Deploy Workflow (`.github/workflows/tests.yml`)
 
 **Se ejecuta en:**
 - Push a `main` o `develop`
 - Pull Requests a `main` o `develop`
 
-**Jobs:**
-1. **test**: Ejecuta tests unitarios con Maven
-2. **build**: Compila y empaqueta el JAR
+**Jobs (encadenados):**
+1. **test**: Ejecuta 24 tests unitarios e integración con Maven/JUnit
+2. **build** `(needs: test)`: Compila y empaqueta el JAR, sube artefacto
+3. **deploy** `(needs: build)`: Levanta el entorno con Docker Compose, verifica health, muestra logs
 
 **Acciones utilizadas:**
 - `actions/checkout@v4` - Obtiene el código
 - `actions/setup-java@v4` - Configura Java 17
-- `actions/upload-artifact@v4` - Guarda reportes
+- `actions/upload-artifact@v4` - Guarda reportes de tests y JAR
 
 #### 2. Docker Build Workflow (`.github/workflows/docker.yml`)
 
@@ -391,27 +562,37 @@ El proyecto incluye **2 workflows automatizados**:
 - Pull Requests a `main`
 
 **Jobs:**
-1. **docker**: Construye y valida la imagen Docker
+1. **docker**: Construye y valida la imagen Docker con Buildx
 
 **Acciones utilizadas:**
 - `docker/setup-buildx-action@v3` - Setup de Docker Buildx
-- `docker/build-push-action@v5` - Build de imagen
-- Cache GHA para acelerar builds
+- `docker/build-push-action@v5` - Build de imagen con cache GHA
+
+#### 3. Security Workflow (`.github/workflows/security.yml`)
+
+**Se ejecuta en:**
+- Push a `main` o `develop`
+- Pull Requests a `main`
+
+**Jobs:**
+1. **dependencias**: Valida y analiza dependencias con Maven
+2. **sonarcloud**: Análisis estático de código con SonarCloud — bloquea si hay issues críticos
 
 ### Rol del CI/CD
 
 ```
-Developer push → GitHub Actions activa → Tests → Build → Verificación
+Developer push → GitHub Actions activa → Tests → Build → Deploy simulado
                                      ↓
-                                  [Éxito]
+                             [Seguridad + Docker]
                                      ↓
                           PR aprobado y mergeable
 ```
 
 1. **Validación temprana**: Detecta errores antes del merge
 2. **Calidad consistente**: Todos los PRs pasan los mismos checks
-3. **Deploy confiable**: Solo código que pasa tests llega a main
+3. **Deploy confiable**: Solo código que pasa tests llega a main y se despliega
 4. **Feedback rápido**: Resultados en minutos
+5. **Trazabilidad**: Artefactos y logs guardados por 7 días en GitHub
 
 ---
 
@@ -420,9 +601,14 @@ Developer push → GitHub Actions activa → Tests → Build → Verificación
 ```
 EP1-DevOps-Tareas/
 ├── .github/
-│   └── workflows/          # GitHub Actions
-│       ├── tests.yml       # CI: Tests + Build
-│       └── docker.yml      # CI: Docker Build
+│   ├── dependabot.yml          # Actualización automática de dependencias
+│   └── workflows/              # GitHub Actions
+│       ├── tests.yml           # CI/CD: Tests + Build + Deploy simulado
+│       ├── docker.yml          # CI: Docker Build
+│       └── security.yml        # CI: Análisis de seguridad (Dependabot + SonarCloud)
+├── k8s/                        # Manifiestos Kubernetes (IE5)
+│   ├── deployment.yml          # Deployments: write, read, postgres + PVC + Secret
+│   └── service.yml             # Services: LoadBalancer y ClusterIP
 ├── .mvn/                   # Maven Wrapper
 ├── src/
 │   ├── main/
