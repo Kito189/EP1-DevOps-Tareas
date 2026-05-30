@@ -23,7 +23,7 @@ jobs:
           cache: maven
 
       - name: Validar dependencias del proyecto
-        run: mvn -B dependency:resolve dependency:analyze -DfailOnWarning=false
+        run: .\mvnw.cmd -B dependency:resolve dependency:analyze -DfailOnWarning=false
 
   sonarcloud:
     runs-on: self-hosted
@@ -43,7 +43,7 @@ jobs:
           cache: maven
 
       - name: Compilar y analizar con SonarCloud
-        run: mvn -B verify sonar:sonar -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+        run: .\mvnw.cmd -B verify sonar:sonar -Dsonar.token=${{ secrets.SONAR_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
