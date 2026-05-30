@@ -5,6 +5,7 @@ import com.example.ticketservice.application.port.out.NotificationPort;
 import com.example.ticketservice.application.port.out.TicketRepositoryPort;
 import com.example.ticketservice.domain.Ticket;
 import com.example.ticketservice.domain.factory.TicketFactory;
+import java.util.List;
 
 public class TicketService implements TicketUseCase {
 
@@ -34,5 +35,10 @@ public class TicketService implements TicketUseCase {
     public Ticket consultarEstadoTicket(String id) {
         return ticketRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket no encontrado con el ID: " + id));
+    }
+
+    @Override
+    public List<Ticket> listarTickets() {
+        return ticketRepository.findAll();
     }
 }

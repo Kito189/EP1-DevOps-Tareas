@@ -6,7 +6,9 @@ import com.example.ticketservice.infrastructure.adapter.out.persistence.entity.T
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @Primary
@@ -41,5 +43,15 @@ public class JpaTicketRepositoryAdapter implements TicketRepositoryPort {
                         entity.getId(),
                         entity.getDescripcion(),
                         entity.getEstado()));
+    }
+
+    @Override
+    public List<Ticket> findAll() {
+        return springDataTicketRepository.findAll().stream()
+                .map(entity -> new Ticket(
+                        entity.getId(),
+                        entity.getDescripcion(),
+                        entity.getEstado()))
+                .collect(Collectors.toList());
     }
 }
