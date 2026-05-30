@@ -19,22 +19,24 @@ jobs:
       uses: docker/setup-buildx-action@v3
 
     - name: Verificar Dockerfile existe
+      shell: pwsh
       run: |
-        if [ -f "Dockerfile" ]; then
-          echo "✓ Dockerfile encontrado"
-        else
-          echo "✗ Dockerfile no encontrado"
+        if (Test-Path "Dockerfile") {
+          Write-Host "Dockerfile encontrado"
+        } else {
+          Write-Error "Dockerfile no encontrado"
           exit 1
-        fi
+        }
 
     - name: Verificar docker-compose.yml existe
+      shell: pwsh
       run: |
-        if [ -f "docker-compose.yml" ]; then
-          echo "✓ docker-compose.yml encontrado"
-        else
-          echo "✗ docker-compose.yml no encontrado"
+        if (Test-Path "docker-compose.yml") {
+          Write-Host "docker-compose.yml encontrado"
+        } else {
+          Write-Error "docker-compose.yml no encontrado"
           exit 1
-        fi
+        }
 
     - name: Construir imagen Docker
       uses: docker/build-push-action@v5

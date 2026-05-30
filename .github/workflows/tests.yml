@@ -88,49 +88,53 @@ jobs:
       run: docker compose up -d --build
 
     - name: Esperar que la base de datos esté lista
+      shell: pwsh
       run: |
-        echo "Esperando que PostgreSQL esté saludable..."
-        for i in $(seq 1 12); do
-          STATUS=$(docker compose ps --format json | python3 -c "import sys,json; data=[json.loads(l) for l in sys.stdin if l.strip()]; healthy=[s for s in data if 'db' in s.get('Name','') and s.get('Health','') == 'healthy']; print('ok' if healthy else 'wait')" 2>/dev/null || echo "wait")
-          if [ "$STATUS" = "ok" ]; then
-            echo "Base de datos lista."
+        Write-Host "Esperando que PostgreSQL esté saludable..."
+        for ($i = 1; $i -le 12; $i++) {
+          $status = docker compose ps --format json | python3 -c "import sys,json; data=[json.loads(l) for l in sys.stdin if l.strip()]; healthy=[s for s in data if 'db' in s.get('Name','') and s.get('Health','') == 'healthy']; print('ok' if healthy else 'wait')" 2>$null
+          if ($status -eq "ok") {
+            Write-Host "Base de datos lista."
             break
-          fi
-          echo "Intento $i/12 - esperando 5s..."
-          sleep 5
-        done
+          }
+          Write-Host "Intento $i/12 - esperando 5s..."
+          Start-Sleep -Seconds 5
+        }
 
-    - name: Esperar que los servicios de aplicación estén disponibles
+    - name: Esperar que los servicios estén disponibles
+      shell: pwsh
       run: |
-        echo "Esperando write-service (puerto 8081)..."
-        for i in $(seq 1 12); do
-          if curl -sf http://localhost:8081/actuator/health > /dev/null 2>&1; then
-            echo "Write service disponible."
-            break
-          fi
-          echo "Intento $i/12 - esperando 5s..."
-          sleep 5
-        done
-        echo "Esperando read-service (puerto 8082)..."
-        for i in $(seq 1 12); do
-          if curl -sf http://localhost:8082/actuator/health > /dev/null 2>&1; then
-            echo "Read service disponible."
-            break
-          fi
-          echo "Intento $i/12 - esperando 5s..."
-          sleep 5
-        done
+        Write-Host "Esperando write-service (puerto 8081)..."
+        for ($i = 1; $i -le 12; $i++) {
+          try {
+            $r = Invoke-WebRequest -Uri http://localhost:8081/actuator/health -UseBasicParsing -TimeoutSec 3
+            Write-Host "Write service disponible."; break
+          } catch {
+            Write-Host "Intento $i/12 - esperando 5s..."
+            Start-Sleep -Seconds 5
+          }
+        }
+        Write-Host "Esperando read-service (puerto 8082)..."
+        for ($i = 1; $i -le 12; $i++) {
+          try {
+            $r = Invoke-WebRequest -Uri http://localhost:8082/actuator/health -UseBasicParsing -TimeoutSec 3
+            Write-Host "Read service disponible."; break
+          } catch {
+            Write-Host "Intento $i/12 - esperando 5s..."
+            Start-Sleep -Seconds 5
+          }
+        }
 
     - name: Verificar estado de los contenedores
       run: docker compose ps
 
     - name: Verificar salud de los servicios
+      shell: pwsh
       run: |
-        echo "=== Write Service Health ==="
-        curl -sf http://localhost:8081/actuator/health || echo "Write service no responde"
-        echo ""
-        echo "=== Read Service Health ==="
-        curl -sf http://localhost:8082/actuator/health || echo "Read service no responde"
+        Write-Host "=== Write Service Health ==="
+        try { Invoke-WebRequest -Uri http://localhost:8081/actuator/health -UseBasicParsing | Select-Object -ExpandProperty Content } catch { Write-Host "Write service no responde" }
+        Write-Host "=== Read Service Health ==="
+        try { Invoke-WebRequest -Uri http://localhost:8082/actuator/health -UseBasicParsing | Select-Object -ExpandProperty Content } catch { Write-Host "Read service no responde" }
 
     - name: Mostrar logs del despliegue
       if: always()
