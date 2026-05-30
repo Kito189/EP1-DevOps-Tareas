@@ -8,8 +8,8 @@ COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
-# Dar permisos de ejecución a mvnw
-RUN chmod +x mvnw
+# Dar permisos de ejecución a mvnw y corregir saltos de línea
+RUN chmod +x mvnw && sed -i 's/\r$//' mvnw
 
 # Descargar dependencias (capa cacheable)
 RUN ./mvnw -B dependency:go-offline
