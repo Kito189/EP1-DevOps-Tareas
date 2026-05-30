@@ -1,5 +1,5 @@
 # Etapa 1: Build con Maven
-FROM eclipse-temurin:17-jdk-alpine AS builder
+FROM eclipse-temurin:25-jdk-alpine AS builder
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ COPY src src
 RUN ./mvnw -B clean package -DskipTests
 
 # Etapa 2: Imagen final ligera
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 WORKDIR /app
 
