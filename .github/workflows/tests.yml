@@ -33,6 +33,7 @@ jobs:
 
     - name: Subir reportes de tests
       if: always()
+      continue-on-error: true
       uses: actions/upload-artifact@v4
       with:
         name: reportes-tests
@@ -59,6 +60,7 @@ jobs:
       run: .\mvnw.cmd -B clean package -DskipTests
 
     - name: Subir artefacto JAR
+      continue-on-error: true
       uses: actions/upload-artifact@v4
       with:
         name: ticket-service-jar
