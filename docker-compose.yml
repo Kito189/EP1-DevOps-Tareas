@@ -82,3 +82,20 @@ services:
           memory: 512M
         reservations:
           memory: 256M
+
+  frontend:
+    image: nginx:alpine
+    container_name: ticket-frontend
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+    depends_on:
+      - write-service
+      - read-service
+    networks:
+      - ticket-network
+    restart: unless-stopped
+    labels:
+      - "com.ticketservice.role=frontend"
+      - "com.ticketservice.version=1.0"
